@@ -1,18 +1,16 @@
 # Multi-stage Dockerfile for building and running the Spring Boot (Gradle) application
 
-# Builder: use a full JDK image and the Gradle wrapper to produce the fat jar
-FROM eclipse-temurin:17-jdk-jammy AS builder
-WORKDIR /workspace
+# Builder: use the official Gradle image (includes Gradle) so we don't depend on a
+# checked-in gradle-wrapper.jar. This avoids errors on hosts where the wrapper jar
+# isn't present in the build context (e.g. Render.com).
+FROM gradle:8.6-jdk17 AS builder
+WORKDIR /home/gradle/project
 
-# Copy Gradle wrapper and project files (optimize layer caching)
-COPY gradlew gradlew
-COPY gradle gradle
-COPY settings.gradle build.gradle ./
-COPY src ./src
+# Copy project files. Set ownership to the `gradle` user inside the image for proper permissions.
+COPY --chown=gradle:gradle . .
 
-# Ensure the wrapper is executable and build the boot jar (skip tests for speed)
-RUN chmod +x gradlew \
-    && ./gradlew bootJar -x test --no-daemon
+# Build the boot jar (skip tests for speed). Using the image's Gradle avoids needing gradle-wrapper.jar.
+RUN gradle bootJar -x test --no-daemon
 
 # Runtime: smaller JRE image
 FROM eclipse-temurin:17-jre-jammy
