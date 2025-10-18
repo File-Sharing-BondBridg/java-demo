@@ -1,27 +1,31 @@
 # Multi-stage Dockerfile for building and running the Spring Boot (Gradle) application
 
-# Builder: use the official Gradle image (includes Gradle) so we don't depend on a
-# checked-in gradle-wrapper.jar. This avoids errors on hosts where the wrapper jar
-# isn't present in the build context (e.g. Render.com).
-FROM gradle:8.6-jdk17 AS builder
+# Builder: Use official Gradle image with JDK 17
+FROM gradle:8.14.3-jdk17 AS builder
 WORKDIR /home/gradle/project
 
-# Copy project files. Set ownership to the `gradle` user inside the image for proper permissions.
+# Copy project files with proper permissions
 COPY --chown=gradle:gradle . .
 
-# Build the boot jar (skip tests for speed). Using the image's Gradle avoids needing gradle-wrapper.jar.
-RUN gradle bootJar -x test --no-daemon
+# Debug: List directory to verify files
+RUN ls -la /home/gradle/project && ls -la /home/gradle/project/gradle/wrapper || echo "Wrapper directory missing"
 
-# Runtime: smaller JRE image
+# Ensure gradlew is executable and build the JAR
+RUN chmod +x gradlew && ./gradlew clean bootJar -x test --no-daemon
+
+# Debug: Verify JAR exists
+RUN ls -la /home/gradle/project/build/libs || echo "No JAR found in build/libs"
+
+# Runtime: Smaller JRE image
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Copy the jar from the builder stage
-COPY --from=builder /workspace/build/libs/*.jar app.jar
+# Copy the JAR from the correct build path
+COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# Use a non-root user for better security
+# Use non-root user for security
 RUN addgroup --system app && adduser --system --ingroup app app
 USER app
 
