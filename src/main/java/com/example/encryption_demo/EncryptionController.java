@@ -30,10 +30,13 @@ public class EncryptionController {
             return ResponseEntity.badRequest().body(new ErrorResponse("Decryption failed: " + e.getMessage()));
         }
     }
+}
 
-    @GetMapping("/loaderio-71cde7773e383aa12f1f5d1123308af8/")
+@RestController
+@RequestMapping("/")
+class RootController {
+    @GetMapping("loaderio-71cde7773e383aa12f1f5d1123308af8/")
     public String loaderioVerification() {
         return "loaderio-71cde7773e383aa12f1f5d1123308af8";
     }
-
 }
