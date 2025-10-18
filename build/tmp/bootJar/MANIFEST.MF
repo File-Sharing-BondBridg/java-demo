@@ -1,7 +1,6 @@
 Manifest-Version: 1.0
 Main-Class: org.springframework.boot.loader.launch.JarLauncher
-Start-Class: main.java.com.example.encryption_demo.EncryptionDemoApplica
- tion
+Start-Class: com.example.encryption_demo.EncryptionDemoApplication
 Spring-Boot-Version: 3.5.6
 Spring-Boot-Classes: BOOT-INF/classes/
 Spring-Boot-Lib: BOOT-INF/lib/
